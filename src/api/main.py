@@ -12,6 +12,7 @@ from datetime import datetime
 from typing import Optional
 
 from src.services.ocr_service import extract_data_from_file
+from src.services.shivaay_service import ShivaayAIService
 from src.core.comparison import compare_invoice_po
 from src.core.storage import TransactionStorage, export_to_csv
 from src.core.config import settings
@@ -231,6 +232,93 @@ async def get_statistics():
         "mismatched": mismatched,
         "match_rate": f"{(matched/total*100):.2f}%" if total > 0 else "0%"
     }
+
+
+@app.post("/upload_advanced")
+async def upload_and_process_advanced(
+    invoice: UploadFile = File(...),
+    po: UploadFile = File(...)
+):
+    """
+    Advanced upload using structured Shivaay AI extraction and AI comparison.
+
+    Returns both AI-driven comparison and legacy rule-based mapping for compatibility.
+    """
+    try:
+        allowed_extensions = {'.pdf', '.png', '.jpg', '.jpeg'}
+        invoice_ext = os.path.splitext(invoice.filename)[1].lower()
+        po_ext = os.path.splitext(po.filename)[1].lower()
+        if invoice_ext not in allowed_extensions or po_ext not in allowed_extensions:
+            raise HTTPException(status_code=400, detail=f"Only {', '.join(allowed_extensions)} files are supported")
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        invoice_filename = f"invoice_{timestamp}{invoice_ext}"
+        po_filename = f"po_{timestamp}{po_ext}"
+        invoice_path = os.path.join(settings.UPLOAD_DIR, invoice_filename)
+        po_path = os.path.join(settings.UPLOAD_DIR, po_filename)
+
+        with open(invoice_path, "wb") as f:
+            shutil.copyfileobj(invoice.file, f)
+        with open(po_path, "wb") as f:
+            shutil.copyfileobj(po.file, f)
+
+        shivaay = ShivaayAIService()
+
+        inv_struct = shivaay.extract_invoice_data(invoice_path, "invoice")
+        po_struct = shivaay.extract_invoice_data(po_path, "purchase_order")
+
+        ai_comparison = shivaay.compare_documents_with_ai(inv_struct, po_struct)
+
+        # Map structured to legacy keys for current comparison/storage compatibility
+        def map_struct(d: dict) -> dict:
+            return {
+                "vendor": d.get("vendor_name"),
+                "invoice_no": d.get("invoice_number"),
+                "po_no": None,
+                "date": d.get("date"),
+                "total": d.get("total_amount"),
+                "raw_text": d.get("raw_response", ""),
+                "confidence": d.get("confidence_score", 0),
+                "ocr_engine": "Shivaay AI",
+            }
+
+        invoice_mapped = map_struct(inv_struct)
+        po_mapped = map_struct(po_struct)
+
+        rule_comparison = compare_invoice_po(invoice_mapped, po_mapped)
+
+        transaction = {
+            "invoice_vendor": invoice_mapped.get("vendor", "N/A"),
+            "po_vendor": po_mapped.get("vendor", "N/A"),
+            "invoice_total": invoice_mapped.get("total", 0),
+            "po_total": po_mapped.get("total", 0),
+            "invoice_date": invoice_mapped.get("date", "N/A"),
+            "po_date": po_mapped.get("date", "N/A"),
+            "invoice_number": invoice_mapped.get("invoice_no", "N/A"),
+            "po_number": po_mapped.get("po_no", "N/A"),
+            "status": rule_comparison["status"],
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "details": {
+                "ai": ai_comparison,
+                "rule": rule_comparison.get("details", {}),
+            },
+        }
+
+        storage.add_transaction(transaction)
+
+        return {
+            "status": "processed",
+            "invoice_structured": inv_struct,
+            "po_structured": po_struct,
+            "ai_result": ai_comparison,
+            "rule_result": rule_comparison,
+            "transaction_id": len(storage.transactions),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
 
 
 if __name__ == "__main__":
