@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --bg: 255 255 255;
-  --fg: 17 24 39;
+  --bg: 26 35 50; /* #1a2332 */
+  --fg: 249 250 251; /* #f9fafb */
 }
 
 html, body, #__next {

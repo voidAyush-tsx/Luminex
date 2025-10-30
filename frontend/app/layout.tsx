@@ -1,8 +1,8 @@
 import './globals.css'
 import { ReactNode } from 'react'
 import { Inter } from 'next/font/google'
-import Link from 'next/link'
 import { AppProvider } from '../components/AppContext'
+import Sidebar from '../components/Sidebar'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -16,18 +16,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body className={inter.className}>
         <AppProvider>
-          <header className="border-b">
-            <div className="container flex items-center justify-between py-4">
-              <Link href="/" className="font-semibold text-lg">Luminex</Link>
-              <nav className="flex gap-4 text-sm">
-                <Link href="/" className="hover:underline">Upload</Link>
-                <Link href="/history" className="hover:underline">History</Link>
-                <Link href="/stats" className="hover:underline">Stats</Link>
-              </nav>
+          <Sidebar />
+          <main className="pl-[320px] min-h-screen">
+            <div className="max-w-7xl mx-auto px-8 py-8">
+              {children}
             </div>
-          </header>
-          <main className="container py-6">
-            {children}
           </main>
         </AppProvider>
       </body>
