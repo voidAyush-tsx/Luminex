@@ -1,0 +1,87 @@
+# Dependencies
+node_modules/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Build outputs
+dist/
+build/
+out/
+.storybook-out/  # legacy; if used
+storybook-static/
+dist-electron/
+
+# Framework outputs/caches
+.next/
+.nuxt/
+.svelte-kit/
+.angular/
+.output/
+.netlify/
+.vercel/
+.firebase/
+.turbo/
+
+# Caches
+.cache/
+.parcel-cache/
+.vite/
+node_modules/.cache/
+node_modules/.vite/
+.eslintcache
+.stylelintcache
+.npm/
+
+# Tests/reports
+coverage/
+.nyc_output/
+cypress/screenshots/
+cypress/videos/
+.cypress-cache/
+playwright-report/
+test-results/
+.vitest/
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS / Editors
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.history/
+*.swp
+*.swo
+
+# Temp
+tmp/
+temp/
+
+# Note: keep lockfiles committed
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
