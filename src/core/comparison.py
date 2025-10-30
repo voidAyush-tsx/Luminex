@@ -3,10 +3,15 @@ Discrepancy Detection Engine
 Compares invoice and PO data to identify mismatches
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from fuzzywuzzy import fuzz
 from datetime import datetime
 from src.core.config import settings
+
+
+def _fmt_percent(value: Optional[float]) -> str:
+    """Format a percent float safely, or return 'N/A' if None."""
+    return f"{value:.2f}%" if value is not None else "N/A"
 
 
 def fuzzy_match_vendor(vendor1: str, vendor2: str, threshold: int = None) -> bool:
@@ -143,10 +148,13 @@ def compare_invoice_po(invoice_data: Dict[str, Any], po_data: Dict[str, Any]) ->
     )
 
     if not vendor_match:
+        reason = "Vendor names do not match (fuzzy match < 85%)"
+        if not invoice_data.get("vendor") or not po_data.get("vendor"):
+            reason = "Vendor not available in one or both documents"
         mismatches["vendor"] = {
             "invoice": invoice_data.get("vendor", "N/A"),
             "po": po_data.get("vendor", "N/A"),
-            "reason": "Vendor names do not match (fuzzy match < 85%)"
+            "reason": reason,
         }
 
     # Compare total amounts
@@ -157,12 +165,18 @@ def compare_invoice_po(invoice_data: Dict[str, Any], po_data: Dict[str, Any]) ->
     )
 
     if not amount_match:
+        diff_percent_str = _fmt_percent(amount_diff_percent)
+        reason = (
+            f"Amount difference exceeds tolerance (diff: {diff_percent_str})"
+            if amount_diff_percent is not None else
+            "Amount not available in one or both documents"
+        )
         mismatches["total"] = {
-            "invoice": invoice_data.get("total", 0),
-            "po": po_data.get("total", 0),
-            "difference": amount_diff,
-            "difference_percent": f"{amount_diff_percent:.2f}%" if amount_diff_percent else "N/A",
-            "reason": f"Amount difference exceeds tolerance (diff: {amount_diff_percent:.2f}%)"
+            "invoice": invoice_data.get("total", "N/A"),
+            "po": po_data.get("total", "N/A"),
+            "difference": amount_diff if amount_diff is not None else "N/A",
+            "difference_percent": diff_percent_str,
+            "reason": reason,
         }
 
     # Compare dates
@@ -173,19 +187,22 @@ def compare_invoice_po(invoice_data: Dict[str, Any], po_data: Dict[str, Any]) ->
     )
 
     if not date_match:
+        reason = (
+            f"Dates do not match (diff: {date_diff} days)" if date_diff is not None
+            else "Date not available in one or both documents or unsupported format"
+        )
         mismatches["date"] = {
             "invoice": invoice_data.get("date", "N/A"),
             "po": po_data.get("date", "N/A"),
-            "difference_days": date_diff,
-            "reason": f"Dates do not match (diff: {date_diff} days)" if date_diff else "Dates do not match"
+            "difference_days": date_diff if date_diff is not None else "N/A",
+            "reason": reason,
         }
 
     # Determine overall status
+    status = "MATCHED ✅" if not mismatches else "MISMATCH ⚠️"
     if mismatches:
-        status = "MISMATCH ⚠️"
         print(f"\n❌ Discrepancies found: {len(mismatches)}")
     else:
-        status = "MATCHED ✅"
         print(f"\n✅ All fields matched!")
 
     # Build result
@@ -198,13 +215,13 @@ def compare_invoice_po(invoice_data: Dict[str, Any], po_data: Dict[str, Any]) ->
             "message": "All fields matched successfully",
             "vendor_match": True,
             "amount_match": True,
-            "date_match": True
+            "date_match": True,
         },
         "summary": {
             "vendor": "✅ Matched" if vendor_match else "❌ Mismatch",
             "amount": "✅ Matched" if amount_match else "❌ Mismatch",
-            "date": "✅ Matched" if date_match else "❌ Mismatch"
-        }
+            "date": "✅ Matched" if date_match else "❌ Mismatch",
+        },
     }
 
     return result

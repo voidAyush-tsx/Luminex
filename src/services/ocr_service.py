@@ -6,7 +6,7 @@ OCR-based data extraction using Shivaay AI Vision API
 import os
 import re
 import base64
-import requests
+from openai import OpenAI
 from typing import Dict, Any, Optional
 from datetime import datetime
 from pdf2image import convert_from_path
@@ -63,7 +63,7 @@ def convert_pdf_to_image(pdf_path: str) -> str:
 
 def perform_ocr_with_shivaay(image_path: str) -> tuple:
     """
-    Perform OCR using Shivaay AI Vision API
+    Perform OCR using Shivaay AI Vision API (OpenAI-compatible)
 
     Args:
         image_path: Path to image file
@@ -78,19 +78,23 @@ def perform_ocr_with_shivaay(image_path: str) -> tuple:
         if not api_key:
             raise Exception("Shivaay API key not configured. Set SHIVAAY_API_KEY environment variable.")
 
+        # Initialize OpenAI client with Shivaay AI endpoint
+        client = OpenAI(
+            api_key=api_key,
+            base_url=settings.SHIVAAY_API_BASE
+        )
+
         # Encode image
         base64_image = encode_image_to_base64(image_path)
 
-        # Prepare request to Shivaay AI
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
-
         # Use OpenAI-compatible chat completion with vision
-        payload = {
-            "model": settings.OCR_MODEL,
-            "messages": [
+        response = client.chat.completions.create(
+            model=settings.OCR_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an expert document analysis assistant specialized in extracting structured data from invoices and purchase orders."
+                },
                 {
                     "role": "user",
                     "content": [
@@ -124,30 +128,21 @@ def perform_ocr_with_shivaay(image_path: str) -> tuple:
                     ]
                 }
             ],
-            "max_tokens": 1000
-        }
-
-        # Make request to Shivaay AI
-        response = requests.post(
-            f"{settings.SHIVAAY_API_BASE}/v1/chat/completions",
-            headers=headers,
-            json=payload,
-            timeout=30
+            temperature=0.7,
+            max_tokens=1000
         )
 
-        if response.status_code != 200:
-            raise Exception(f"Shivaay AI API error: {response.status_code} - {response.text}")
-
-        result = response.json()
-
         # Extract text from response
-        if 'choices' in result and len(result['choices']) > 0:
-            extracted_text = result['choices'][0]['message']['content']
+        if response.choices and len(response.choices) > 0:
+            extracted_text = response.choices[0].message.content
 
             # Estimate confidence (Shivaay AI doesn't provide explicit confidence)
             confidence = 0.90  # Default high confidence for AI-based extraction
 
             print(f"✅ Shivaay AI OCR complete. Confidence: {confidence:.2f}")
+
+            # Convert response to dict for compatibility
+            result = response.model_dump()
 
             return extracted_text, confidence, result
         else:

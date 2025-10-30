@@ -34,9 +34,9 @@ class Settings:
     ALLOWED_EXTENSIONS = {'.pdf', '.png', '.jpg', '.jpeg'}
 
     # OCR Settings (Shivaay AI)
-    SHIVAAY_API_BASE = "https://shivaay.futurixai.com"
+    SHIVAAY_API_BASE = "https://api.futurixai.com/api/shivaay/v1"
     SHIVAAY_API_KEY = os.getenv("SHIVAAY_API_KEY", "")
-    OCR_MODEL = "gpt-4o"  # Shivaay AI vision model
+    OCR_MODEL = "shivaay"  # Shivaay AI vision model
     OCR_DPI = 300  # For PDF to image conversion
 
     # Comparison Tolerances
