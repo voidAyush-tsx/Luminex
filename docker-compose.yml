@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  futurix-api:
+    build: .
+    container_name: futurix_ai_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data/uploads:/app/data/uploads
+      - ./data/exports:/app/data/exports
+      - ./data/samples:/app/data/samples
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SHIVAAY_API_KEY=${SHIVAAY_API_KEY}
+    restart: unless-stopped
