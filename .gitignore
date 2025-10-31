@@ -121,3 +121,15 @@ Thumbs.db
 .sass-cache/
 bower_components/
 
+# Backend specific
+backend/data/uploads/*
+backend/data/exports/*
+backend/logs/*
+backend/*.db
+backend/*.db-journal
+backend/.env
+backend/.env.local
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
