@@ -1,0 +1,178 @@
+===========================================
+Futurix AI Repository Cleanup Preview
+===========================================
+
+This document lists files and directories that should be reviewed for cleanup.
+
+TIMESTAMP: Generated on execution
+
+===========================================
+FILES FLAGGED FOR REVIEW
+===========================================
+
+Root-level files that may be redundant or outdated:
+
+1. debug_client.py
+   - Status: Appears to be debug/test utility
+   - Action: REVIEW - May be useful for debugging, consider moving to scripts/
+
+2. fix_openai_client.sh
+   - Status: Fix script (likely one-time use)
+   - Action: REVIEW - Can be removed if fix is already applied
+
+3. FIX_README.md
+   - Status: Fix documentation (likely one-time)
+   - Action: REVIEW - Can be removed if information is in main README
+
+4. setup_shivaay_integration.sh
+   - Status: Setup script
+   - Action: REVIEW - May be redundant if setup is documented elsewhere
+
+5. SHIVAAY_INTEGRATION_SUMMARY.md
+   - Status: Documentation file
+   - Action: REVIEW - Consider consolidating into backend/README.md or docs/
+
+6. test_openai_client.py
+   - Status: Test file
+   - Action: REVIEW - Move to backend/tests/ or remove if redundant
+
+7. test_shivaay_integration.py
+   - Status: Test file
+   - Action: REVIEW - Move to backend/tests/ or remove if redundant
+
+8. run.py
+   - Status: Main entry point
+   - Action: REVIEW - Check if backend/app/main.py replaces this
+
+===========================================
+DIRECTORIES FLAGGED FOR REVIEW
+===========================================
+
+1. src/
+   - Status: Old project structure
+   - Action: REVIEW - Determine if this is replaced by backend/
+   - Risk: HIGH - May contain active code that needs migration
+   - Recommendation: 
+     * Compare src/ with backend/ to identify differences
+     * Migrate any unique functionality
+     * Archive or remove once migration confirmed
+
+2. examples/
+   - Status: Example/demo code
+   - Action: REVIEW - Consider moving to docs/examples/ or removing
+   - Files: quick_reference.py, shivaay_demo.py
+
+===========================================
+DUPLICATE CONFIGURATION FILES
+===========================================
+
+Root level vs backend/ level:
+
+1. requirements.txt
+   - Root: Old requirements (may be outdated)
+   - Backend: New requirements for FastAPI backend
+   - Action: Keep backend/requirements.txt, archive or remove root version
+
+2. Dockerfile
+   - Root: Old Dockerfile
+   - Backend: New multi-stage Dockerfile
+   - Action: Keep backend/Dockerfile, archive or remove root version
+
+3. docker-compose.yml
+   - Root: Old docker-compose config
+   - Backend: New docker-compose with Redis/Celery
+   - Action: Keep backend/docker-compose.yml, archive or remove root version
+
+===========================================
+AUTOMATIC CLEANUP (SAFE TO REMOVE)
+===========================================
+
+These will be automatically removed by cleanup script:
+
+1. __pycache__/ directories
+2. *.pyc, *.pyo files
+3. .DS_Store files (macOS)
+4. *.tmp, *.bak temporary files
+5. Standalone *.log files (keeps logs/ directory)
+
+===========================================
+POTENTIAL SECRETS/ENV FILES
+===========================================
+
+Check these files for sensitive data (DO NOT DELETE - REVIEW CONTENT):
+
+1. .env files (if any exist)
+   - Action: Ensure they are in .gitignore
+   - Check: No secrets committed to repository
+
+2. credentials.json, token.pickle (Gmail)
+   - Status: Already in .gitignore
+   - Action: Verify they are not committed
+
+===========================================
+RECOMMENDED ACTIONS
+===========================================
+
+HIGH PRIORITY:
+1. Decide on src/ vs backend/ structure
+2. Consolidate duplicate config files
+3. Move test files to appropriate locations
+4. Update .gitignore with additional patterns
+
+MEDIUM PRIORITY:
+1. Archive or remove one-time fix scripts
+2. Consolidate documentation files
+3. Organize example files
+
+LOW PRIORITY:
+1. Clean up old debug utilities
+2. Remove temporary test files
+
+===========================================
+NEXT STEPS
+===========================================
+
+1. Run cleanup_repo.sh to create backup
+2. Review this preview_cleanup.txt
+3. Manually review flagged files/directories
+4. Execute selective deletions
+5. Update .gitignore
+6. Test application still works
+7. Commit changes with descriptive message
+
+===========================================
+PROPOSED COMMIT MESSAGE
+===========================================
+
+feat: Add complete FastAPI backend with Celery and cleanup repository
+
+- Add comprehensive backend/ structure with FastAPI, Celery, SQLAlchemy
+- Implement Shivaay AI integration for document parsing
+- Add email automation with Gmail OAuth2
+- Implement verification service and CSV export
+- Add Docker and docker-compose configuration
+- Create comprehensive README and test checklist
+- Clean up repository: remove __pycache__, .pyc files, temporary files
+- Update .gitignore to prevent re-adding cleaned files
+- Archive old src/ structure (to be migrated or removed separately)
+
+Files added:
+- backend/app/ - Complete FastAPI application
+- backend/tests/ - Unit tests
+- backend/requirements.txt - Python dependencies
+- backend/Dockerfile - Multi-stage Docker build
+- backend/docker-compose.yml - Docker Compose setup
+- backend/README.md - Comprehensive documentation
+- backend/test_checklist.md - Testing checklist
+- cleanup_repo.sh - Cleanup script
+- preview_cleanup.txt - Cleanup preview report
+
+Files cleaned:
+- Removed Python cache files (__pycache__, *.pyc)
+- Removed system files (.DS_Store)
+- Removed temporary files (*.tmp, *.bak)
+
+Note: src/ directory preserved for review/migration
+
+===========================================
+
