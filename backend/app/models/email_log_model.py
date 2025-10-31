@@ -1,6 +1,6 @@
 """Email Log database model."""
 
-from sqlalchemy import Column, String, Text, JSON, DateTime
+from sqlalchemy import Column, String, Text, JSON, DateTime, Integer
 from app.models.base import BaseModel
 
 

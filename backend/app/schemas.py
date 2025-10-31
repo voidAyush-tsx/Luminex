@@ -98,11 +98,10 @@ class VerificationResponse(BaseModel):
     invoice_id: int
     purchase_order_id: int
     overall_status: str
-    field_checks: List[FieldCheck]
+    field_checks: List[Dict[str, Any]]
     total_fields_checked: int
     matched_fields: int
     mismatched_fields: int
-    match_percentage: float
     created_at: datetime
     updated_at: datetime
     

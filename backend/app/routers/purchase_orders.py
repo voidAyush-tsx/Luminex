@@ -9,8 +9,6 @@ from app.models.purchase_order_model import PurchaseOrder
 from app.utils.file_handler import save_uploaded_file, read_file_bytes, is_valid_file_type
 from app.services.shivaay_ai import extract_document_data
 from app.utils.logger import logger
-from app.core.celery_app import celery_app
-from app.services.shivaay_ai import parse_and_verify_document
 
 router = APIRouter(prefix="/purchase-orders", tags=["purchase-orders"])
 
@@ -64,9 +62,20 @@ async def create_purchase_order(
         db.commit()
         db.refresh(po)
         
-        # Parse document asynchronously via Celery
-        from app.core.celery_app import celery_app
-        celery_app.send_task("parse_and_verify_document", args=[file_bytes, None])
+        # Parse document synchronously for immediate feedback
+        result = extract_document_data(file_bytes)
+        if result.get("success"):
+            data = result.get("data", {})
+            for key, value in data.items():
+                if hasattr(po, key):
+                    setattr(po, key, value)
+            po.parsing_status = "success"
+            po.raw_data = result.get("raw_response")
+        else:
+            po.parsing_status = "failed"
+            po.parsing_error = result.get("error")
+        db.commit()
+        db.refresh(po)
         
         return po
     except Exception as e:

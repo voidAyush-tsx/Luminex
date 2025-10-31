@@ -1,23 +1,26 @@
 "use client"
-import React, { createContext, useContext, useMemo, useState } from 'react'
+import React, { createContext, useContext, useState } from 'react'
 
-type AppContextType = {
+interface AppContextType {
   apiBaseUrl: string
-  setApiBaseUrl: (v: string) => void
+  setApiBaseUrl: (url: string) => void
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined)
+const AppContext = createContext<AppContextType>({
+  apiBaseUrl: 'http://127.0.0.1:8000',
+  setApiBaseUrl: () => {},
+})
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [apiBaseUrl, setApiBaseUrl] = useState<string>(process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000')
-  const value = useMemo(() => ({ apiBaseUrl, setApiBaseUrl }), [apiBaseUrl])
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>
+  const [apiBaseUrl, setApiBaseUrl] = useState('http://127.0.0.1:8000')
+
+  return (
+    <AppContext.Provider value={{ apiBaseUrl, setApiBaseUrl }}>
+      {children}
+    </AppContext.Provider>
+  )
 }
 
-export function useApp() {
-  const ctx = useContext(AppContext)
-  if (!ctx) throw new Error('useApp must be used within AppProvider')
-  return ctx
-}
+export const useApp = () => useContext(AppContext)
 
 

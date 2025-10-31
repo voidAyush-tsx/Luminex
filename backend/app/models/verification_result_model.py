@@ -32,4 +32,11 @@ class VerificationResult(BaseModel):
     # Relationships
     invoice = relationship("Invoice", backref="verification_results")
     purchase_order = relationship("PurchaseOrder", backref="verification_results")
+    
+    @property
+    def match_percentage(self):
+        """Calculate match percentage."""
+        if self.total_fields_checked == 0:
+            return 0.0
+        return (self.matched_fields / self.total_fields_checked) * 100
 

@@ -37,7 +37,7 @@ export default function UploadPage() {
     <div className="space-y-8">
       <h1 className="text-4xl md:text-5xl font-semibold">Upload</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FileUpload title="Inovice" onFileSelect={setInvoice} />
+        <FileUpload title="Invoice" onFileSelect={setInvoice} />
         <FileUpload title="Purchase Order" onFileSelect={setPo} />
       </div>
       {error && <div className="text-status-error text-sm">{error}</div>}

@@ -3,18 +3,26 @@
 import os
 import time
 from typing import Dict, Any, Optional
-from openai import OpenAI
 from app.core.config import get_settings
 from app.utils.logger import logger
 from app.utils.validators import parse_decimal, parse_date, normalize_string
 
 settings = get_settings()
 
-# Initialize Shivaay AI client
-client = OpenAI(
-    api_key=settings.shivaay_api_key,
-    base_url=settings.shivaay_base_url
-)
+# Initialize client lazily to avoid import errors
+_client = None
+
+
+def get_shivaay_client():
+    """Get or create Shivaay AI client."""
+    global _client
+    if _client is None:
+        from openai import OpenAI
+        _client = OpenAI(
+            api_key=settings.shivaay_api_key,
+            base_url=settings.shivaay_base_url
+        )
+    return _client
 
 
 def extract_document_data(file_bytes: bytes, max_retries: int = 3, retry_delay: float = 1.0) -> Dict[str, Any]:
@@ -29,6 +37,8 @@ def extract_document_data(file_bytes: bytes, max_retries: int = 3, retry_delay: 
     Returns:
         Dictionary with parsed document fields
     """
+    client = get_shivaay_client()
+    
     prompt = """Extract the following information from this document and return as JSON:
 - vendor_name: Name of the vendor/supplier
 - vendor_address: Full address of vendor

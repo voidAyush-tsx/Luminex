@@ -46,16 +46,9 @@ class Settings:
     
     def __init__(self):
         """Validate required settings."""
-        required = [
-            "shivaay_api_key",
-            "gmail_client_id",
-            "gmail_client_secret",
-            "gmail_refresh_token",
-            "jwt_secret_key",
-        ]
-        missing = [key for key in required if not getattr(self, key)]
-        if missing:
-            raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
+        # Only validate API key as critical for development
+        if not self.shivaay_api_key:
+            raise ValueError("Missing required environment variable: SHIVAAY_API_KEY")
 
 
 @lru_cache()
@@ -71,7 +64,8 @@ def _ensure_directories():
         settings = get_settings()
         os.makedirs(settings.upload_dir, exist_ok=True)
         os.makedirs(settings.export_dir, exist_ok=True)
-    except ValueError:
-        # Settings not fully configured yet, skip directory creation
+    except Exception as e:
         pass
+
+_ensure_directories()
 

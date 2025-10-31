@@ -9,8 +9,6 @@ from app.models.invoice_model import Invoice
 from app.utils.file_handler import save_uploaded_file, read_file_bytes, is_valid_file_type
 from app.services.shivaay_ai import extract_document_data
 from app.utils.logger import logger
-from app.core.celery_app import celery_app
-from app.services.shivaay_ai import parse_and_verify_document
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 
@@ -64,22 +62,20 @@ async def create_invoice(
         db.commit()
         db.refresh(invoice)
         
-        # Parse document asynchronously via Celery
-        from app.core.celery_app import celery_app
-        celery_app.send_task("parse_and_verify_document", args=[file_bytes, None])
-        
-        # Alternatively, parse synchronously:
-        # result = extract_document_data(file_bytes)
-        # if result.get("success"):
-        #     data = result.get("data", {})
-        #     for key, value in data.items():
-        #         if hasattr(invoice, key):
-        #             setattr(invoice, key, value)
-        #     invoice.parsing_status = "success"
-        # else:
-        #     invoice.parsing_status = "failed"
-        #     invoice.parsing_error = result.get("error")
-        # db.commit()
+        # Parse document synchronously for immediate feedback
+        result = extract_document_data(file_bytes)
+        if result.get("success"):
+            data = result.get("data", {})
+            for key, value in data.items():
+                if hasattr(invoice, key):
+                    setattr(invoice, key, value)
+            invoice.parsing_status = "success"
+            invoice.raw_data = result.get("raw_response")
+        else:
+            invoice.parsing_status = "failed"
+            invoice.parsing_error = result.get("error")
+        db.commit()
+        db.refresh(invoice)
         
         return invoice
     except Exception as e:
